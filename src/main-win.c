@@ -261,14 +261,47 @@ static void on_file_clicked(FmFolderView* fv, FmFolderViewClickType type, FmFile
 
 static void on_sel_changed(FmFolderView* fv, FmFileInfoList* files, FmMainWin* win)
 {
-    /* popup previous message if there is any */
-    gtk_statusbar_pop(GTK_STATUSBAR(win->statusbar), win->statusbar_ctx2);
+
+    // use SI metric by default
+    static gboolean use_si_prefix = TRUE ;
+
     if(files)
     {
-        char* msg;
-        /* FIXME: display total size of all selected files. */
-        if(fm_list_get_length(files) == 1) /* only one file is selected */
+
+        unsigned items_num = fm_list_get_length(files) ;
+        goffset items_size = 0 ;
+
+        char* msg = NULL ;
+
+        if ( items_num > 1) // multiple items are selected
         {
+            GList* l;
+            for(l=fm_list_peek_head_link(files);l;l=l->next)
+            {
+                FmFileInfo* fi = (FmFileInfo*)l->data;
+                // ignore folders when calculating total size.
+                if( !fm_file_info_is_dir(fi) )
+                {
+                    items_size += fm_file_info_get_size(fi) ;
+                }
+            }
+
+            // at least one normal file is selected
+            if ( items_size > 0 )
+            {
+                char items_size_str[ 64 ];
+                fm_file_size_to_str( items_size_str, items_size, use_si_prefix );
+
+                msg = g_strdup_printf("%d items selected, total size: %s", items_num, items_size_str);
+            }
+            else
+            {
+                msg = g_strdup_printf("%d items selected", items_num);
+            }
+        }
+        else // only one item is selected
+        {
+
             FmFileInfo* fi = fm_list_peek_head(files);
             const char* size_str = fm_file_info_get_disp_size(fi);
             if(size_str)
@@ -284,11 +317,16 @@ static void on_sel_changed(FmFolderView* fv, FmFileInfoList* files, FmMainWin* w
                             fm_file_info_get_disp_name(fi),
                             fm_file_info_get_desc(fi));
             }
+
         }
-        else
-            msg = g_strdup_printf("%d items selected", fm_list_get_length(files));
+
+        /* popup previous message if there is any */
+        gtk_statusbar_pop(GTK_STATUSBAR(win->statusbar), win->statusbar_ctx2);
+
+        // update statusbar
         gtk_statusbar_push(GTK_STATUSBAR(win->statusbar), win->statusbar_ctx2, msg);
         g_free(msg);
+
     }
 }
 
