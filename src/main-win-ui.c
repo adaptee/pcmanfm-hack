@@ -118,6 +118,7 @@ static const char main_menu_xml[] =
   "<separator/>"
   "<menuitem action='Prop'/>"
 "</popup>"
+"<accelerator action='Prop2'/>"
 "<accelerator action='Location'/>"
 "<accelerator action='Location2'/>"
 "<accelerator action='Prev2'/>"
@@ -163,6 +164,7 @@ static GtkActionEntry main_win_actions[]=
         {"Term", "utilities-terminal", N_("Open Current Folder in _Terminal"), "F4", NULL, G_CALLBACK(on_open_in_terminal)},
         {"AsRoot", GTK_STOCK_DIALOG_AUTHENTICATION, N_("Open Current Folder as _Root"), NULL, NULL, G_CALLBACK(on_open_as_root)},
     /* for accelerators */
+    {"Prop2", GTK_STOCK_PROPERTIES, NULL, "<Alt>p", NULL, G_CALLBACK(on_prop)},
     {"Location", NULL, NULL, "<Alt>d", NULL, G_CALLBACK(on_location)},
     {"Location2", NULL, NULL, "<Ctrl>L", NULL, G_CALLBACK(on_location)},
     {"Prev2", NULL, NULL, "XF86Back", NULL, G_CALLBACK(on_go_back)},
