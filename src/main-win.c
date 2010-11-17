@@ -322,6 +322,46 @@ static gboolean on_view_key_press_event(FmFolderView* fv, GdkEventKey* evt, FmMa
     case GDK_BackSpace:
         on_go_up(NULL, win);
         break;
+    case GDK_KEY_Menu :
+        // it's weird, but without this extra line of noop stament, gcc will complain:
+        // 'a label can only be part of a statement and a declaration is not a statement'
+        do{} while(0) ;
+
+        FmFileInfoList * files = fm_folder_view_get_selected_files(fv);
+
+        if(files)
+        {
+            FmFileMenu* menu;
+            GtkMenu* popup;
+
+            //only care about the first selected item
+            GList* l = fm_list_peek_head_link(files);
+            FmFileInfo* fi = (FmFileInfo*)l->data;
+
+            menu = fm_file_menu_new_for_files(GTK_WINDOW(win), files, fm_folder_view_get_cwd(fv), TRUE);
+            fm_file_menu_set_folder_func(menu, open_folder_func, win);
+            fm_list_unref(files);
+
+            //merge some specific menu items for folders
+            if(fm_file_menu_is_single_file_type(menu) && fm_file_info_is_dir(fi))
+            {
+                GtkUIManager* ui = fm_file_menu_get_ui(menu);
+                GtkActionGroup* act_grp = fm_file_menu_get_action_group(menu);
+                gtk_action_group_set_translation_domain(act_grp, NULL);
+                gtk_action_group_add_actions(act_grp, folder_menu_actions, G_N_ELEMENTS(folder_menu_actions), win);
+                gtk_ui_manager_add_ui_from_string(ui, folder_menu_xml, -1, NULL);
+            }
+
+            popup = fm_file_menu_get_menu(menu);
+            gtk_menu_popup(popup, NULL, NULL, NULL, fi, 3, gtk_get_current_event_time());
+        }
+        else // no files are selected. Show context menu of current folder.
+        {
+            gtk_menu_popup(GTK_MENU(win->popup), NULL, NULL, NULL, NULL, 3, gtk_get_current_event_time());
+        }
+
+        break;
+
     case GDK_Delete:
         on_del(NULL, win);
         break;
